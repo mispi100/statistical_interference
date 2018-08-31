@@ -9,38 +9,53 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Part 1: Simulation Exercise Instructions
+# Part 1: Exponential Distribution & Central Limit Theorem
 
-In this project you will investigate the exponential distribution in R and compare it with the Central Limit Theorem. The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. Set lambda = 0.2 for all of the simulations. You will investigate the distribution of averages of 40 exponentials. Note that you will need to do a thousand simulations.
+## Overview
+This part is about the difference between the distribution of large collection of random exponentials vs. the distribution of large collections of averages of random exponentials. In this simulation a large collection contains 1,000 values and the averages of exponentials are calculated as average over 40 exponentials. 
 
-Illustrate via simulation and associated explanatory text the properties of the distribution of the mean of 40 exponentials. You should
+The relation between these two distributions is given by the central limit theorem, which states when independent random variables (in some situations) are added, their properly normalized sum tends toward a normal distribution even if the original variables themselves are not normally distributed.
 
-Show the sample mean and compare it to the theoretical mean of the distribution.
-Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
-Show that the distribution is approximately normal.
+## Exponential distribution
+The exponential function $\lambda * \exp(-\lambda x)$ in R is given by "rexp()" function.
+If we pick randomly from this distribution (1,000 times), we get a sample distribution which looks pretty much like the original exponential distribution.
 
-In point 3, focus on the difference between the distribution of a large collection of random exponentials and the distribution of a large collection of averages of 40 exponentials.
-
-As a motivating example, compare the distribution of 1000 random uniforms
-
-
-```{r cars}
-hist(runif(1000))
+```{r expdistr}
+lambda = 0.2
+n=1000
+exponential_function <- rexp(n, lambda)
+hist(exponential_function)
+eq = function(x){lambda*exp(-lambda*x)}
+curve(eq, from=0, to=35, xlab="x", ylab="y")
 ```
 
-and the distribution of 1000 averages of 40 random uniforms
+
+
+
+
+```{r exp1}
+#set seed(123456)
+lambda = 0.2
+n=40
+average_distribution = c()
+for (i in 1:1000)
+  average_distribution[i] <- mean(rexp(n, lambda))
+hist(average_distribution)
+```
+
+
+approximately normal distribution ... t distribution?
+
+The mean  and standard deviation of the normal distribution are $1/\lambda$, with $\lambda = 0.2$ follows $mean = \sigma = \frac{1}{\lambda}=\frac{1}{0.2}=5$. 
+
+
 
 ```{r pressure, echo=FALSE}
-mns = NULL
-for (i in 1 : 1000) mns = c(mns, mean(runif(40)))
-hist(mns)
+#mns = NULL
+#for (i in 1 : 1000) mns = c(mns, mean(rexp(n, lambda)))
+#hist(mns)
 ```
 
-This distribution looks far more Gaussian than the original uniform distribution!
-
-This exercise is asking you to use your knowledge of the theory given in class to relate the two distributions.
-
-Confused? Try re-watching video lecture 07 for a starter on how to complete this project.
 
 ## Aufbau
 
@@ -56,11 +71,35 @@ Sample Variance versus Theoretical Variance: Include figures (output from R) wit
 
 Distribution: Via figures and text, explain how one can tell the distribution is approximately normal.
     
-## Part 2: Basic Inferential Data Analysis Instructions
+## Part 2: Tooth Growth Data Set
 
-Now in the second portion of the project, we're going to analyze the ToothGrowth data in the R datasets package.
 
-Load the ToothGrowth data and perform some basic exploratory data analyses
+###Description
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC). 
+
+
+[,1]	 len	 numeric	 Tooth length
+[,2]	 supp	 factor	 Supplement type (VC or OJ).
+[,3]	 dose	 numeric	 Dose in milligrams/day
+
+Source
+
+C. I. Bliss (1952) The Statistics of Bioassay. Academic Press.
+
+##exploratory data analyses
+
+```{r}
+library(datasets)
+data(ToothGrowth)
+head(ToothGrowth)
+summary(ToothGrowth)
+str(ToothGrowth)
+```
+
+
+
 Provide a basic summary of the data.
+
+## Hypothesis Testing
 Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
 State your conclusions and the assumptions needed for your conclusions.
