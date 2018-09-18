@@ -9,70 +9,70 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+# Overview
+### Part 1: Exponential Distribution & Central Limit Theorem
+This part covers the difference between the distribution of large collection of random exponentials vs. a distribution of large collections of averages of these random exponentials. In this simulation a large collection contains 1,000 values and the averages of exponentials are calculated as average over 40 exponentials. 
+
+The relation between these two distributions is given by the central limit theorem, which states when independent random variables are summed up, their distribution of sums tends towards a normal distribution, even if the original variables themselves are not normally distributed.
+
+### Part 2: Tooth Growth Data Set
+
 # Part 1: Exponential Distribution & Central Limit Theorem
-
-## Overview
-This part is about the difference between the distribution of large collection of random exponentials vs. the distribution of large collections of averages of random exponentials. In this simulation a large collection contains 1,000 values and the averages of exponentials are calculated as average over 40 exponentials. 
-
-The relation between these two distributions is given by the central limit theorem, which states when independent random variables (in some situations) are added, their properly normalized sum tends toward a normal distribution even if the original variables themselves are not normally distributed.
 
 ## Exponential distribution
 The exponential function $\lambda * \exp(-\lambda x)$ in R is given by "rexp()" function.
-If we pick randomly from this distribution (1,000 times), we get a sample distribution which looks pretty much like the original exponential distribution.
+If we pick randomly from this distribution (1,000 times), we get a sample distribution which looks pretty much like the original exponential distribution. The random sample mirrors the underlying distribution, seen in the following plots.
 
-```{r expdistr}
+```{r expdistr, fig.width=7, fig.height=4}
 lambda = 0.2
 n=1000
-exponential_function <- rexp(n, lambda)
-hist(exponential_function)
 eq = function(x){lambda*exp(-lambda*x)}
-curve(eq, from=0, to=35, xlab="x", ylab="y")
+exponential_function <- rexp(n, lambda)
+par(mfrow=c(1,2))
+curve(eq, from=0, to=35, xlab="x", ylab="y", main = "exponential function")
+hist(exponential_function, main = "histogram of \n random exponentials", xlab="x", ylab="y")
+```
+
+We calculate the theoretical mean and variance of the distibution and the experimental, from our random exponentials and see the values are pretty close. 
+
+```{r}
+sum_avgs <- data.frame("case" = c("theoretical", "experimental"), 
+                       "mean" = c(1/lambda, mean(exponential_function)), 
+                       "variance" = c(1/(lambda*lambda),var(exponential_function)))
+sum_avgs
 ```
 
 
 
+Now we pick randomly 40 numbers from the exponential function and calculate the average of these values. 
+This step is repeated 1,000 times. 
+The distribution of averages looks approximately normal distributed.
 
-
-```{r exp1}
-#set seed(123456)
+```{r exp1, fig.width=7, fig.height=4}
 lambda = 0.2
 n=40
 average_distribution = c()
 for (i in 1:1000)
   average_distribution[i] <- mean(rexp(n, lambda))
-hist(average_distribution)
+par(mfrow=c(1,2))
+hist(average_distribution, main = "histogram of \n average distribution", xlab = "averages", ylab = "frequency")
+x <- seq(2.5, 8.5, length=100)
+hx <- dnorm(x, mean = 1/lambda, sd = 0.8)
+plot(x, hx, type="l", lty=2, xlab="x value",
+  ylab="density", main="normal distribution \n mean = 5, standard deviation =0.8")
+```
+From these distribution, we can estimate the average of the whole dataset, by calculating the mean value of our distribution, which we know is 5 and study the variance.
+
+```{r}
+sum_avgs <- data.frame("case" = c("theoretical", "experimental"), 
+                       "mean" = c(1/lambda, mean(average_distribution)), 
+                       "variance" = c("?",var(average_distribution)))
+sum_avgs
 ```
 
-
-approximately normal distribution ... t distribution?
-
-The mean  and standard deviation of the normal distribution are $1/\lambda$, with $\lambda = 0.2$ follows $mean = \sigma = \frac{1}{\lambda}=\frac{1}{0.2}=5$. 
-
-
-
-```{r pressure, echo=FALSE}
-#mns = NULL
-#for (i in 1 : 1000) mns = c(mns, mean(rexp(n, lambda)))
-#hist(mns)
-```
-
-
-## Aufbau
-
-Title (give an appropriate title) and Author Name
-
-Overview: In a few (2-3) sentences explain what is going to be reported on.
-
-Simulations: Include English explanations of the simulations you ran, with the accompanying R code. Your explanations should make clear what the R code accomplishes.
-
-Sample Mean versus Theoretical Mean: Include figures with titles. In the figures, highlight the means you are comparing. Include text that explains the figures and what is shown on them, and provides appropriate numbers.
-
-Sample Variance versus Theoretical Variance: Include figures (output from R) with titles. Highlight the variances you are comparing. Include text that explains your understanding of the differences of the variances.
-
-Distribution: Via figures and text, explain how one can tell the distribution is approximately normal.
-    
-## Part 2: Tooth Growth Data Set
-
+# Part 2: Tooth Growth Data Set
+In part two the tooth growth data set is studied. The data set is explored via boxplots. From this point, hypothesis are constructed and then validated or rejected by t-testing.
 
 ###Description
 The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC). 
@@ -86,20 +86,108 @@ Source
 
 C. I. Bliss (1952) The Statistics of Bioassay. Academic Press.
 
-##exploratory data analyses
+#Exploratory Data Analyses
 
+First we take a look at the first lines of the data frame and  summary.
 ```{r}
 library(datasets)
 data(ToothGrowth)
-head(ToothGrowth)
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+head(ToothGrowth, n= 3)
 summary(ToothGrowth)
-str(ToothGrowth)
+```
+As the description already told us, we can see that we got 3 columns and 60 observables. The first column len, is a 
+numerical value which gives us the length of the odontoblasts.
+The supplement is in 30 cases OJ and in the other 30 cases VC. 
+The dose of the supplement can be either 0.5, 1 or 2.
+
+First we compare the length of odontoblasts as a 
+function of the given supplement.
+
+```{r, fig.width=3, fig.height=4}
+boxplot(len~supp,data=ToothGrowth,
+   xlab="Given Supplement", ylab="Length of Odontoblasts") 
+```
+
+From this plot we can state a first hypothesis:
+
+Hypothesis 1: The mean length of odontoblasts is higher, when the 
+guinea pigs are given Vitamin C via Orange Juice (OJ), than via Adsorbic Acid (VC) (independent of dose).
+
+Than we compare the length of odontoblasts as a 
+function of the given dose.
+
+```{r, fig.width=4, fig.height=4}
+boxplot(len~dose,data=ToothGrowth,
+   xlab="Given Dose", ylab="Length of Odontoblasts") 
+```
+
+From this plot, we can state a new hypothesis:
+
+Hypothesis 2: The mean length of odontoblasts is higher, when the 
+guinea pigs are given higher doses of Vitamin C (independent of the supplement).
+
+
+Now we plot the length of odontoblasts as a 
+function of a combination of given dose and supplement.
+```{r, fig.width=8, fig.height=4}
+boxplot(len~supp*dose, data=ToothGrowth,
+  xlab="Combination of Supplement and Dose", 
+  ylab = "Length of Odontoblasts") 
+```
+
+
+This plot now, gives us more insights.
+We can state new hypothesis, e.g.
+
+Hypothesis 3: When we give a high dose (2) of Vitamin C,
+the length of Odontoblasts is independent of the supplement (either OJ or VC).
+
+All three hypothesis are tested on significance.
+
+
+## Hypothesis Testing
+
+Hypothesis 1: The mean length of odontoblasts is higher, when the guinea pigs are given Vitamin C via
+Orange Juice (OJ), than via Adsorbic Acid (VC) (independent of dose).
+
+To test if there is a significant effect, the null hypothesis is tested, by a t-test, that there is no effect.
+```{r}
+t.test(ToothGrowth$len[ToothGrowth$supp=="OJ"], ToothGrowth$len[ToothGrowth$supp=="VC"], paired=FALSE, var.equal=FALSE)
+```
+The p-Value is 6.3 %, this means with an alpha of 5% we can not reject the null hypothesis. 
+So we can not (!) conclude that length of the odontoblasts depends on the supplement.
+
+Hypothesis 2: The mean length of odontoblasts is higher, when the 
+guinea pigs are given higher doses of Vitamin C (independent of the supplement).
+
+
+When we test this hypothesis for dose of 0.5 vs dose 0f 0.1, wee get a p-Value smaller than 0.01, which indicates our hypothesis is true.
+```{r}
+t.test(ToothGrowth$len[ToothGrowth$dose==0.5], 
+       ToothGrowth$len[ToothGrowth$dose==1], var.equal = FALSE)
+```
+
+The same holds for a dosage increase from 1 to 2.
+
+```{r}
+t.test(ToothGrowth$len[ToothGrowth$dose==1], 
+       ToothGrowth$len[ToothGrowth$dose==2], var.equal = FALSE)
+```
+
+Hypothesis 3: When we give a high dose (2) of Vitamin C,
+the length of Odontoblasts is independent of the supplement (either OJ or VC).
+
+
+This time, we calculate a p-value of 96.4%, which indicates, the probability
+that the means differ from each other is really low and we can throw away this hypothesis. This indicates the means are equal for this example
+```{r}
+t.test(ToothGrowth$len[ToothGrowth$dose==2 & ToothGrowth$supp=="OJ"], 
+       ToothGrowth$len[ToothGrowth$dose==2 & ToothGrowth$supp=="VC"],
+       var.equal = FALSE)
 ```
 
 
 
-Provide a basic summary of the data.
 
-## Hypothesis Testing
-Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
-State your conclusions and the assumptions needed for your conclusions.
+
